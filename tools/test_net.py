@@ -59,7 +59,7 @@ def main():
 
     test_datasets = {
         "test_matterport": Matterport(split="test"),
-        "official_nyu_test": NyuV2Test(split="official_test"),
+        # "official_nyu_test": NyuV2Test(split="official_test"),
         #
         # # first
         # "1gr10pv1pd": NyuV2Test(split="1gr10pv1pd"),
