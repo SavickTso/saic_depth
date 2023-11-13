@@ -6,7 +6,7 @@ from PIL import Image
 
 # ROOT = '/Vol1/dbstore/datasets/depth_completion/Matterport3D/'
 # ROOT = "/Vol0/user/d.senushkin/datasets/matterport3d"
-ROOT = "/root/saic_depth_completion"
+ROOT = "/root/saic_depth"
 
 class Matterport:
     def __init__(
