@@ -11,16 +11,15 @@ from saic_depth_completion.utils.meter import Statistics as LossMeter
 from saic_depth_completion.utils import visualize
 
 
-def inference(
-        model, test_loaders, metrics, save_dir="", logger=None
-):
-
+def inference(model, test_loaders, metrics, save_dir="", logger=None):
     model.eval()
     metrics_meter = AggregatedMeter(metrics, maxlen=20)
     for subset, loader in test_loaders.items():
         idx = 0
         logger.info(
-            "Inference: subset -- {}. Total number of batches: {}.".format(subset, len(loader))
+            "Inference: subset -- {}. Total number of batches: {}.".format(
+                subset, len(loader)
+            )
         )
 
         metrics_meter.reset()
@@ -35,12 +34,18 @@ def inference(
                     B = batch["color"].shape[0]
                     for it in range(B):
                         fig = visualize.figure(
-                            batch["color"][it], batch["raw_depth"][it],
-                            batch["mask"][it], batch["gt_depth"][it],
-                            post_pred[it], close=True
+                            batch["color"][it],
+                            batch["raw_depth"][it],
+                            batch["mask"][it],
+                            batch["gt_depth"][it],
+                            post_pred[it],
+                            close=True,
                         )
                         fig.savefig(
-                            os.path.join(save_dir, "result_{}.png".format(idx)), dpi=fig.dpi
+                            os.path.join(
+                                save_dir, "result_{}.png".format(batch["filename"][it])
+                            ),
+                            dpi=fig.dpi,
                         )
 
                         idx += 1
