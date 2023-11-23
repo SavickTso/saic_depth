@@ -1,5 +1,4 @@
 import os
-import re
 import torch
 
 import numpy as np
@@ -102,12 +101,18 @@ class Matterport:
         )
         render_depth = np.array(Image.open(self.render_name[index])) / 4000.0
         depth = np.array(Image.open(self.depth_name[index])) / 4000.0
-        name = [match for match in re.findall(r"\d+\.\d+|\d+", self.depth_name[index])]
+
         normals = np.array(Image.open(self.normal_name[index])).transpose([2, 0, 1])
         normals = (normals - 90.0) / 180.0
 
         mask = np.zeros_like(depth)
         mask[np.where(depth > 0)] = 1
+
+        print(
+            "the depth filename of the index {} is {} ".format(
+                index, self.depth_name[index]
+            )
+        )
 
         return {
             "color": torch.tensor(color, dtype=torch.float32),
@@ -115,5 +120,5 @@ class Matterport:
             "mask": torch.tensor(mask, dtype=torch.float32).unsqueeze(0),
             "normals": torch.tensor(normals, dtype=torch.float32).unsqueeze(0),
             "gt_depth": torch.tensor(render_depth, dtype=torch.float32).unsqueeze(0),
-            "filename": torch.tensor(name, dtype=torch.int32),
+            "index": torch.tensor(index, dtype=torch.int32),
         }

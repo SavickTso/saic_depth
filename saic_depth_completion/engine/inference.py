@@ -32,9 +32,6 @@ def inference(model, test_loaders, metrics, save_dir="", logger=None):
                 post_pred = model.postprocess(pred)
                 if save_dir:
                     B = batch["color"].shape[0]
-                    file_num = "".join(
-                        str(value.item()) for value in batch["filename"][it]
-                    )
                     for it in range(B):
                         fig = visualize.figure(
                             batch["color"][it],
@@ -45,9 +42,10 @@ def inference(model, test_loaders, metrics, save_dir="", logger=None):
                             close=True,
                         )
                         fig.savefig(
-                            os.path.join(save_dir, "result_{}.png".format(file_num)),
+                            os.path.join(save_dir, "result_{}.png".format(idx)),
                             dpi=fig.dpi,
                         )
+                        print(batch["index"][it])
 
                         idx += 1
 
