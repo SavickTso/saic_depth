@@ -2,7 +2,7 @@ import argparse
 import os
 import time
 
-import keyboard
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pyzed.sl as sl
@@ -138,12 +138,17 @@ def main():
         "ssim": SSIM(),
     }
 
-    color = zed_capture_once()
+    # color = zed_capture_once()
 
-    # color = plt.imread("/root/saic_depth/data/backupcolor.jpg").transpose(2, 0, 1)
-    depth = plt.imread("/root/saic_depth/data/backupdepth.png")
-    print("color shape ", color.shape)
-    print("depth shape ", depth.shape)
+    color = (
+        plt.imread("/root/saic_depth/data/color_image_1.jpg").transpose(2, 0, 1) / 255.0
+    )
+    depth = (
+        cv2.imread("/root/saic_depth/data/depth_converted.png", cv2.IMREAD_ANYDEPTH)
+        / 4000.0
+    )
+    # print("color shape ", color.shape)
+    # print("depth shape ", depth.shape)
     mask = np.zeros_like(depth)
     mask[np.where(depth > 0)] = 1
     # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
