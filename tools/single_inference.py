@@ -3,6 +3,7 @@ import os
 import time
 
 import cv2
+import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
 import pyzed.sl as sl
@@ -147,8 +148,10 @@ def main():
         cv2.imread("/root/saic_depth/data/depth_converted.png", cv2.IMREAD_ANYDEPTH)
         / 4000.0
     )
-    # print("color shape ", color.shape)
-    # print("depth shape ", depth.shape)
+    print(depth.max())
+    # depth = plt.imread("/root/saic_depth/data/depth_converted.png") / 4000.0
+    print("color shape ", color.shape)
+    print("depth shape ", depth.shape)
     mask = np.zeros_like(depth)
     mask[np.where(depth > 0)] = 1
     # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
