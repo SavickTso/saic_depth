@@ -139,8 +139,8 @@ def main():
         "ssim": SSIM(),
     }
 
-    color = plt.imread("/root/saic_depth/data/0000000000.png")
-    depth = plt.imread("/root/saic_depth/data/0000000000_depth.png")
+    color = plt.imread("/root/saic_depth/data/backupcolor.jpg")
+    depth = plt.imread("/root/saic_depth/data/backupdepth.png")
     mask = np.zeros_like(depth)
     mask[np.where(depth > 0)] = 1
     # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
