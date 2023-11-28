@@ -3,7 +3,6 @@ import os
 import time
 
 import cv2
-import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
 import pyzed.sl as sl
@@ -40,13 +39,6 @@ def zed_capture_once():
     # Capture 10 color and depth images with a 0.8-second time gap
 
     if zed.grab() == sl.ERROR_CODE.SUCCESS:
-        # Check if the "k" key is pressed
-        if keyboard.is_pressed("k"):
-            print("Start capturing...")
-        else:
-            print("Press 'k' to continue...")
-            keyboard.wait("k")
-
         time.sleep(0.5)
         zed.retrieve_image(image, sl.VIEW.LEFT)
         zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
