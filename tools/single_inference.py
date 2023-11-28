@@ -2,8 +2,10 @@ import argparse
 import os
 import time
 
+import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
+import pyzed.sl as sl
 import torch
 
 from saic_depth_completion.config import get_default_config
@@ -14,50 +16,47 @@ from saic_depth_completion.utils.logger import setup_logger
 from saic_depth_completion.utils.meter import AggregatedMeter
 from saic_depth_completion.utils.snapshoter import Snapshoter
 
-# import keyboard
-# import pyzed.sl as sl
-# import numpy as np
 
-# def zed_capture_once():
-#     zed = sl.Camera()
+def zed_capture_once():
+    zed = sl.Camera()
 
-#     init_params = sl.InitParameters()
-#     init_params.camera_resolution = sl.RESOLUTION.HD1080
-#     init_params.camera_fps = 60
-#     init_params.depth_mode = sl.DEPTH_MODE.ULTRA
-#     init_params.coordinate_units = sl.UNIT.MILLIMETER
+    init_params = sl.InitParameters()
+    init_params.camera_resolution = sl.RESOLUTION.HD1080
+    init_params.camera_fps = 60
+    init_params.depth_mode = sl.DEPTH_MODE.ULTRA
+    init_params.coordinate_units = sl.UNIT.MILLIMETER
 
-#     # Open the camera
-#     err = zed.open(init_params)
-#     if err != sl.ERROR_CODE.SUCCESS:
-#         print("Failed to open the camera")
-#         return
+    # Open the camera
+    err = zed.open(init_params)
+    if err != sl.ERROR_CODE.SUCCESS:
+        print("Failed to open the camera")
+        return
 
-#     # Create image and depth objects
-#     image = sl.Mat()
-#     depth = sl.Mat()
+    # Create image and depth objects
+    image = sl.Mat()
+    depth = sl.Mat()
 
-#     # Capture 10 color and depth images with a 0.8-second time gap
+    # Capture 10 color and depth images with a 0.8-second time gap
 
-#     if zed.grab() == sl.ERROR_CODE.SUCCESS:
-#         # Check if the "k" key is pressed
-#         if keyboard.is_pressed("k"):
-#             print("Start capturing...")
-#         else:
-#             print("Press 'k' to continue...")
-#             keyboard.wait("k")
+    if zed.grab() == sl.ERROR_CODE.SUCCESS:
+        # Check if the "k" key is pressed
+        if keyboard.is_pressed("k"):
+            print("Start capturing...")
+        else:
+            print("Press 'k' to continue...")
+            keyboard.wait("k")
 
-#         time.sleep(0.5)
-#         zed.retrieve_image(image, sl.VIEW.LEFT)
-#         zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-#         depth_array = depth.get_data()
-#         print("depth data shape ", depth_array.shape)
-#         depth_array_flat = depth_array.flatten()
-#         flat_indices = np.argsort(depth_array_flat)
-#         print("max depth is ", depth_array_flat[flat_indices[-2]])
+        time.sleep(0.5)
+        zed.retrieve_image(image, sl.VIEW.LEFT)
+        zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
+        depth_array = depth.get_data()
+        print("depth data shape ", depth_array.shape)
+        depth_array_flat = depth_array.flatten()
+        flat_indices = np.argsort(depth_array_flat)
+        print("max depth is ", depth_array_flat[flat_indices[-2]])
 
-#     zed.close()
-#     return image, depth
+    zed.close()
+    return image
 
 
 def inference(model, batch, metrics, save_dir="", logger=None):
@@ -139,8 +138,12 @@ def main():
         "ssim": SSIM(),
     }
 
-    color = plt.imread("/root/saic_depth/data/backupcolor.jpg").transpose(2, 0, 1)
+    color = zed_capture_once()
+
+    # color = plt.imread("/root/saic_depth/data/backupcolor.jpg").transpose(2, 0, 1)
     depth = plt.imread("/root/saic_depth/data/backupdepth.png")
+    print("color shape ", color.shape)
+    print("depth shape ", depth.shape)
     mask = np.zeros_like(depth)
     mask[np.where(depth > 0)] = 1
     # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
