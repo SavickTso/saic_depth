@@ -5,7 +5,8 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import pyzed.sl as sl
+
+# import pyzed.sl as sl
 import torch
 
 from saic_depth_completion.config import get_default_config
@@ -16,40 +17,39 @@ from saic_depth_completion.utils.logger import setup_logger
 from saic_depth_completion.utils.meter import AggregatedMeter
 from saic_depth_completion.utils.snapshoter import Snapshoter
 
+# def zed_capture_once():
+#     zed = sl.Camera()
 
-def zed_capture_once():
-    zed = sl.Camera()
+#     init_params = sl.InitParameters()
+#     init_params.camera_resolution = sl.RESOLUTION.HD1080
+#     init_params.camera_fps = 60
+#     init_params.depth_mode = sl.DEPTH_MODE.ULTRA
+#     init_params.coordinate_units = sl.UNIT.MILLIMETER
 
-    init_params = sl.InitParameters()
-    init_params.camera_resolution = sl.RESOLUTION.HD1080
-    init_params.camera_fps = 60
-    init_params.depth_mode = sl.DEPTH_MODE.ULTRA
-    init_params.coordinate_units = sl.UNIT.MILLIMETER
+#     # Open the camera
+#     err = zed.open(init_params)
+#     if err != sl.ERROR_CODE.SUCCESS:
+#         print("Failed to open the camera")
+#         return
 
-    # Open the camera
-    err = zed.open(init_params)
-    if err != sl.ERROR_CODE.SUCCESS:
-        print("Failed to open the camera")
-        return
+#     # Create image and depth objects
+#     image = sl.Mat()
+#     depth = sl.Mat()
 
-    # Create image and depth objects
-    image = sl.Mat()
-    depth = sl.Mat()
+#     # Capture 10 color and depth images with a 0.8-second time gap
 
-    # Capture 10 color and depth images with a 0.8-second time gap
+#     if zed.grab() == sl.ERROR_CODE.SUCCESS:
+#         time.sleep(0.5)
+#         zed.retrieve_image(image, sl.VIEW.LEFT)
+#         zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
+#         depth_array = depth.get_data()
+#         print("depth data shape ", depth_array.shape)
+#         depth_array_flat = depth_array.flatten()
+#         flat_indices = np.argsort(depth_array_flat)
+#         print("max depth is ", depth_array_flat[flat_indices[-2]])
 
-    if zed.grab() == sl.ERROR_CODE.SUCCESS:
-        time.sleep(0.5)
-        zed.retrieve_image(image, sl.VIEW.LEFT)
-        zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-        depth_array = depth.get_data()
-        print("depth data shape ", depth_array.shape)
-        depth_array_flat = depth_array.flatten()
-        flat_indices = np.argsort(depth_array_flat)
-        print("max depth is ", depth_array_flat[flat_indices[-2]])
-
-    zed.close()
-    return image
+#     zed.close()
+#     return image
 
 
 def inference(model, batch, metrics, save_dir="", logger=None):
@@ -134,10 +134,16 @@ def main():
     # color = zed_capture_once()
 
     color = (
-        plt.imread("/root/saic_depth/data/color_image_1.jpg").transpose(2, 0, 1) / 255.0
+        plt.imread(
+            "/home/sfoc/dataset/depth_completion/test/color_image_1.jpg"
+        ).transpose(2, 0, 1)
+        / 255.0
     )
     depth = (
-        cv2.imread("/root/saic_depth/data/depth_converted.png", cv2.IMREAD_ANYDEPTH)
+        cv2.imread(
+            "/home/sfoc/dataset/depth_completion/test/depth_converted.png",
+            cv2.IMREAD_ANYDEPTH,
+        )
         / 4000.0
     )
     print(depth.max())
