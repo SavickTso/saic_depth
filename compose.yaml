@@ -1,0 +1,23 @@
+version: '3'
+services:
+  single_infer:
+    image: saic_depth_completion:latest
+    volumes:
+      - /tmp/.X11-unix/:/tmp/.X11-unix
+      - /home/sfoc/saic_depth:/root/saic_depth_completion
+    working_dir: /root/saic_depth_completion/
+    command: ["/bin/bash", "-c", "python3 setup.py install && cd tools && python3 single_inference.py --default_cfg='DM-LRN' --config_file='../configs/dm_lrn/DM-LRN_efficientnet-b4_pepper.yaml' --weights='dm-lrn_b4.pth' --save_dir='../output'"]
+    network_mode: host
+    ipc: host
+    pid: host
+    environment:
+      - DISPLAY
+    tmpfs:
+      - /dev/shm:size=8g
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -52,21 +52,30 @@ from saic_depth_completion.utils.snapshoter import Snapshoter
 #     return image
 
 
-def inference(model, batch, metrics, save_dir="", logger=None):
+def inference(model, cfg, batch, metrics, save_dir="", logger=None):
     model.eval()
     metrics_meter = AggregatedMeter(metrics, maxlen=20)
 
     metrics_meter.reset()
 
+    print("maximum before preprocess", batch["raw_depth"][0].max())
+    print("minimum before preprocess", batch["raw_depth"][0].min())
+
     batch = model.preprocess(batch)
 
     pred = model(batch)
 
+    print("maximum after preprocess", batch["raw_depth"][0].max())
+    print("mainimum after preprocess", batch["raw_depth"][0].min())
     with torch.no_grad():
         post_pred = model.postprocess(pred)
         if save_dir:
             B = batch["color"].shape[0]
             for it in range(B):
+                mask = batch["raw_depth"] != batch["raw_depth"][it].max()
+                batch["raw_depth"][mask] = batch["raw_depth"][mask]*cfg.train.depth_std + cfg.train.depth_mean
+                print("maximum after reverse-preprocess", batch["raw_depth"][0].max())
+                print("minimum after reverse-preprocess", batch["raw_depth"][0].min())
                 fig = visualize_nogt.figure(
                     batch["color"][it],
                     batch["raw_depth"][it],
@@ -135,18 +144,19 @@ def main():
 
     color = (
         plt.imread(
-            "/home/sfoc/dataset/depth_completion/test/color_image_1.jpg"
+            "/root/saic_depth_completion/images/color_image_1.jpg"
         ).transpose(2, 0, 1)
         / 255.0
     )
     depth = (
         cv2.imread(
-            "/home/sfoc/dataset/depth_completion/test/depth_converted.png",
+            "/root/saic_depth_completion/images/depth_converted.png",
             cv2.IMREAD_ANYDEPTH,
         )
         / 4000.0
     )
     print(depth.max())
+    print(depth.min())
     # depth = plt.imread("/root/saic_depth/data/depth_converted.png") / 4000.0
     print("color shape ", color.shape)
     print("depth shape ", depth.shape)
@@ -166,6 +176,7 @@ def main():
 
     inference(
         model,
+        cfg,
         batch,
         save_dir=args.save_dir,
         logger=logger,
