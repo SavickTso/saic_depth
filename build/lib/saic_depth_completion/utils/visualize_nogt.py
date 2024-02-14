@@ -102,14 +102,21 @@ def figure(color, raw_depth, mask, pred, close=False):
     axes[1, 1].set_title("pred")
     img = axes[1, 1].imshow(pred[0], cmap="RdBu_r", vmin=nmin, vmax=nmax)
     fig.colorbar(img, ax=axes[1, 1])
+    upsampled_image = cv.resize(pred[0].numpy().astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
+    cv.imwrite("/root/saic_depth_completion/output/pred.png", upsampled_image)
+    print("shape of the upsampled image is ", upsampled_image.shape)
 
     axes[2, 0].set_title("spiral search")
     img = axes[2, 0].imshow(img_spiral, cmap="RdBu_r", vmin=nmin, vmax=nmax)
     fig.colorbar(img, ax=axes[2, 0])
+    upsampled_image = cv.resize(img_spiral.astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
+    cv.imwrite("/root/saic_depth_completion/output/spiral.png", upsampled_image)
 
     axes[2, 1].set_title("average search")
     img = axes[2, 1].imshow(img_average, cmap="RdBu_r", vmin=nmin, vmax=nmax)
     fig.colorbar(img, ax=axes[2, 1])
+    upsampled_image = cv.resize(img_average.astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
+    cv.imwrite("/root/saic_depth_completion/output/average.png", upsampled_image)
 
     if close:
         plt.close(fig)

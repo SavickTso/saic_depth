@@ -74,6 +74,7 @@ def inference(model, cfg, batch, metrics, save_dir="", logger=None):
             for it in range(B):
                 mask = batch["raw_depth"] != batch["raw_depth"][it].max()
                 batch["raw_depth"][mask] = batch["raw_depth"][mask]*cfg.train.depth_std + cfg.train.depth_mean
+                batch["raw_depth"][it] *= 4000.0
                 print("maximum after reverse-preprocess", batch["raw_depth"][0].max())
                 print("minimum after reverse-preprocess", batch["raw_depth"][0].min())
                 fig = visualize_nogt.figure(
