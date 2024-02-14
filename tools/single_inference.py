@@ -5,8 +5,10 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 # import pyzed.sl as sl
+
 import torch
 
 from saic_depth_completion.config import get_default_config
@@ -143,19 +145,37 @@ def main():
 
     # color = zed_capture_once()
 
-    color = (
-        plt.imread(
-            "/root/saic_depth_completion/images/color_image_1.jpg"
-        ).transpose(2, 0, 1)
-        / 255.0
-    )
-    depth = (
-        cv2.imread(
-            "/root/saic_depth_completion/images/depth_converted.png",
-            cv2.IMREAD_ANYDEPTH,
-        )
-        / 4000.0
-    )
+    # color = (
+    #     plt.imread(
+    #         "/root/saic_depth_completion/images/color_image_1.jpg"
+    #     ).transpose(2, 0, 1)
+    #     / 255.0
+    # )
+    # depth = (
+    #     cv2.imread(
+    #         "/root/saic_depth_completion/images/depth_converted.png",
+    #         cv2.IMREAD_ANYDEPTH,
+    #     )
+    #     / 4000.0
+    # )
+
+    Image.open("/root/saic_depth_completion/images/camera0_458.png").resize((320, 256)).convert("RGB").save("/root/saic_depth_completion/images/temp.jpg")
+    color = (plt.imread("/root/saic_depth_completion/images/temp.jpg").transpose(2,0,1)/255.0)
+    # color = (
+    #     plt.imread(
+    #         "/root/saic_depth_completion/images/color_image_1.jpg"
+    #     ).transpose(2, 0, 1)
+    #     / 255.0
+    # )
+    depth = cv2.resize(cv2.imread("/root/saic_depth_completion/images/depth_458.png",cv2.IMREAD_ANYDEPTH)/ 4000.0, (320, 256), interpolation=cv2.INTER_LINEAR)
+
+    # depth = (
+    #     cv2.imread(
+    #         "/root/saic_depth_completion/images/depth_converted.png",
+    #         cv2.IMREAD_ANYDEPTH,
+    #     )
+    #     / 4000.0
+    # )
     print(depth.max())
     print(depth.min())
     # depth = plt.imread("/root/saic_depth/data/depth_converted.png") / 4000.0
