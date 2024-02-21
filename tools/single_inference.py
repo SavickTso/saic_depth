@@ -54,7 +54,7 @@ from saic_depth_completion.utils.snapshoter import Snapshoter
 #     return image
 
 
-def inference(model, cfg, batch, metrics, save_dir="", logger=None):
+def inference(model, cfg, batch, metrics, save_dir="", logger=None, saveidx=0):
     model.eval()
     metrics_meter = AggregatedMeter(metrics, maxlen=20)
 
@@ -85,10 +85,15 @@ def inference(model, cfg, batch, metrics, save_dir="", logger=None):
                     batch["mask"][it],
                     post_pred[it],
                     close=True,
+                    saveidx=saveidx,
                 )
                 fig.savefig(
                     os.path.join(save_dir, "result_single.png"),
                     dpi=fig.dpi,
+                )
+                fig.savefig(
+                    os.path.join(save_dir, "output_{}.png".format(saveidx)),
+                    dpi = fig.dpi,
                 )
 
 
@@ -159,50 +164,56 @@ def main():
     #     / 4000.0
     # )
 
-    Image.open("/root/saic_depth_completion/images/camera0_458.png").resize((320, 256)).convert("RGB").save("/root/saic_depth_completion/images/temp.jpg")
-    color = (plt.imread("/root/saic_depth_completion/images/temp.jpg").transpose(2,0,1)/255.0)
-    # color = (
-    #     plt.imread(
-    #         "/root/saic_depth_completion/images/color_image_1.jpg"
-    #     ).transpose(2, 0, 1)
-    #     / 255.0
-    # )
-    depth = cv2.resize(cv2.imread("/root/saic_depth_completion/images/depth_458.png",cv2.IMREAD_ANYDEPTH)/ 4000.0, (320, 256), interpolation=cv2.INTER_LINEAR)
+    for saveidx in [111, 126, 165, 199, 212]:
+        Image.open("/root/saic_depth_completion/images/camera0_{}.png".format(saveidx)).resize((320, 256)).convert("RGB").save("/root/saic_depth_completion/images/temp.jpg")
+        color = (plt.imread("/root/saic_depth_completion/images/temp.jpg").transpose(2,0,1)/255.0)
+        # color = (
+        #     plt.imread(
+        #         "/root/saic_depth_completion/images/color_image_1.jpg"
+        #     ).transpose(2, 0, 1)
+        #     / 255.0
+        # )
+        depth = cv2.resize(cv2.imread("/root/saic_depth_completion/images/depth_{}.png".format(saveidx),cv2.IMREAD_ANYDEPTH)/ 4000.0, (320, 256), interpolation=cv2.INTER_LINEAR)
 
-    # depth = (
-    #     cv2.imread(
-    #         "/root/saic_depth_completion/images/depth_converted.png",
-    #         cv2.IMREAD_ANYDEPTH,
-    #     )
-    #     / 4000.0
-    # )
-    print(depth.max())
-    print(depth.min())
-    # depth = plt.imread("/root/saic_depth/data/depth_converted.png") / 4000.0
-    print("color shape ", color.shape)
-    print("depth shape ", depth.shape)
-    mask = np.zeros_like(depth)
-    mask[np.where(depth > 0)] = 1
-    # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
-    index = 0
+        # depth = (
+        #     cv2.imread(
+        #         "/root/saic_depth_completion/images/depth_converted.png",
+        #         cv2.IMREAD_ANYDEPTH,
+        #     )
+        #     / 4000.0
+        # )
+        print(depth.max())
+        print(depth.min())
+        # depth = plt.imread("/root/saic_depth/data/depth_converted.png") / 4000.0
+        print("color shape ", color.shape)
+        print("depth shape ", depth.shape)
 
-    batch = {
-        "color": torch.tensor(color, dtype=torch.float32),
-        "raw_depth": torch.tensor(depth, dtype=torch.float32).unsqueeze(0).unsqueeze(0),
-        "mask": torch.tensor(mask, dtype=torch.float32).unsqueeze(0).unsqueeze(0),
-        # "normals": torch.tensor(normals, dtype=torch.float32).unsqueeze(0),
-        # "gt_depth": torch.tensor(render_depth, dtype=torch.float32).unsqueeze(0),
-        "index": torch.tensor(index, dtype=torch.int32),
-    }
+        start = time.time()
+        mask = np.zeros_like(depth)
+        mask[np.where(depth > 0)] = 1
+        # normals = plt.imread("/root/saic_depth/data/0000000000_normal.png")
+        index = 0
 
-    inference(
-        model,
-        cfg,
-        batch,
-        save_dir=args.save_dir,
-        logger=logger,
-        metrics=metrics,
-    )
+        batch = {
+            "color": torch.tensor(color, dtype=torch.float32),
+            "raw_depth": torch.tensor(depth, dtype=torch.float32).unsqueeze(0).unsqueeze(0),
+            "mask": torch.tensor(mask, dtype=torch.float32).unsqueeze(0).unsqueeze(0),
+            # "normals": torch.tensor(normals, dtype=torch.float32).unsqueeze(0),
+            # "gt_depth": torch.tensor(render_depth, dtype=torch.float32).unsqueeze(0),
+            "index": torch.tensor(index, dtype=torch.int32),
+        }
+
+        inference(
+            model,
+            cfg,
+            batch,
+            save_dir=args.save_dir,
+            logger=logger,
+            metrics=metrics,
+            saveidx=saveidx,
+        )
+        time_elapsed = time.time() - start
+        print("Time elapsed ", time_elapsed)
 
 
 if __name__ == "__main__":

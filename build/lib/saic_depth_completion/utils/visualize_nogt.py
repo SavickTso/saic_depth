@@ -50,7 +50,7 @@ def find_nearest_non_nan(img, x, y, ctr):
     return newdepth, ctr
 
 
-def figure(color, raw_depth, mask, pred, close=False):
+def figure(color, raw_depth, mask, pred, close=False, saveidx=0):
     fig, axes = plt.subplots(3, 2, figsize=(7, 10))
 
     color = color.cpu().permute(1, 2, 0)
@@ -103,7 +103,7 @@ def figure(color, raw_depth, mask, pred, close=False):
     img = axes[1, 1].imshow(pred[0], cmap="RdBu_r", vmin=nmin, vmax=nmax)
     fig.colorbar(img, ax=axes[1, 1])
     upsampled_image = cv.resize(pred[0].numpy().astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
-    cv.imwrite("/root/saic_depth_completion/output/pred.png", upsampled_image)
+    cv.imwrite("/root/saic_depth_completion/output/pred_{}.png".format(saveidx), upsampled_image)
     print("shape of the upsampled image is ", upsampled_image.shape)
 
     axes[2, 0].set_title("spiral search")
