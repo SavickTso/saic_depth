@@ -58,8 +58,8 @@ def figure(color, raw_depth, mask, pred, close=False, saveidx=0):
     mask = mask.cpu()
     pred = pred.detach().cpu()
 
+
     img_origin = deepcopy(raw_depth.squeeze(dim=0).numpy())
-    print("shape of the image origin is ", img_origin.shape)
     img_spiral = deepcopy(img_origin)
     img_average = deepcopy(img_origin)
     ctr = 0
@@ -82,6 +82,16 @@ def figure(color, raw_depth, mask, pred, close=False, saveidx=0):
     print("polars", vmax, vmin, nmax, nmin)
     # Normalize the predict depth image
     pred = (pred - vmin) * ((nmax - nmin) / (vmax - vmin)) + nmin
+    random_pts = [(np.random.randint(0, 255), np.random.randint(0, 319)) for i in range(500)]
+    raw_sampled_sum = 0
+    pred_sample_sum = 0
+    for pt in random_pts:
+        if not img_origin[pt[0], pt[1]]:
+            continue
+        raw_sampled_sum += img_origin[pt[0], pt[1]]
+        pred_sample_sum += pred[0, pt[0], pt[1]]
+    depth_ratio = raw_sampled_sum/pred_sample_sum
+    pred *= depth_ratio
 
     vmin = pred.min()
     vmax = pred.max()
