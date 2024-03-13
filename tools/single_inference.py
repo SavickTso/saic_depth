@@ -6,6 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+from copy import deepcopy
 
 # import pyzed.sl as sl
 
@@ -62,6 +63,24 @@ def inference(model, cfg, batch, metrics, save_dir="", logger=None, saveidx=0):
 
     print("maximum before preprocess", batch["raw_depth"][0].max())
     print("minimum before preprocess", batch["raw_depth"][0].min())
+    
+    avg_5_img = deepcopy(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy())
+    avg_10_img = deepcopy(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy())
+    near_img = deepcopy(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy())
+    print("avg_5_img shape ", avg_5_img.shape)
+    for i in range(avg_5_img.shape[0]):
+        for j in range(avg_5_img.shape[1]):
+            if avg_5_img[i][j] == 0.0:
+                # print("catched invalid depth value at ", i, j)
+                avg_5_img[i][j] = visualize_nogt.find_average_non_nan(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy(), i, j, window_size=5)
+                avg_10_img[i][j] = visualize_nogt.find_average_non_nan(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy(), i, j, window_size=10)
+                near_img[i][j], _ = visualize_nogt.find_nearest_non_nan(batch["raw_depth"][0].cpu().squeeze(dim=0).numpy(), i, j, 0)
+                if avg_5_img[i][j] == 0.0:
+                    avg_5_img[i][j] = np.nanmax(avg_5_img)
+                if avg_10_img[i][j] == 0.0:
+                    avg_10_img[i][j] = np.nanmax(avg_10_img)
+                if near_img[i][j] == 0.0:
+                    near_img[i][j] = np.nanmax(near_img)
 
     batch = model.preprocess(batch)
 
@@ -77,6 +96,11 @@ def inference(model, cfg, batch, metrics, save_dir="", logger=None, saveidx=0):
                 mask = batch["raw_depth"] != batch["raw_depth"][it].max()
                 batch["raw_depth"][mask] = batch["raw_depth"][mask]*cfg.train.depth_std + cfg.train.depth_mean
                 batch["raw_depth"][it] *= 4000.0
+                print("avg 5 shape: ", avg_5_img.shape)
+                # avg_5_img[mask.squeeze().cpu().numpy()] = avg_5_img[mask.squeeze().cpu().numpy()] *cfg.train.depth_std + cfg.train.depth_mean
+                avg_5_img *= 4000.0
+                avg_10_img *= 4000.0
+                near_img *= 4000.0
                 print("maximum after reverse-preprocess", batch["raw_depth"][0].max())
                 print("minimum after reverse-preprocess", batch["raw_depth"][0].min())
                 fig = visualize_nogt.figure(
@@ -86,6 +110,9 @@ def inference(model, cfg, batch, metrics, save_dir="", logger=None, saveidx=0):
                     post_pred[it],
                     close=True,
                     saveidx=saveidx,
+                    avg_5_img=avg_5_img,
+                    avg_10_img=avg_10_img,
+                    near_img=near_img,
                 )
                 fig.savefig(
                     os.path.join(save_dir, "result_single.png"),
