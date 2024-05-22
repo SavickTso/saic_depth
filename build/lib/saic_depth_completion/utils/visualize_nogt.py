@@ -113,13 +113,18 @@ def figure(
     vmax = pred.max()
 
     print("polars", vmax, vmin, nmax, nmin)
+    for i in range(img_origin.shape[0]):
+        for j in range(img_origin.shape[1]):
+            # i is y and j is x
+            if img_origin[i][j] == 0:
+                img_origin[i][j] = nmax
 
     axes[0, 0].set_title("RGB")
     axes[0, 0].imshow((color - color.min()) / (color.max() - color.min()))
     axes[0, 0].axis("off")
 
     axes[0, 1].set_title("Raw")
-    img = axes[0, 1].imshow(raw_depth[0], cmap="RdBu_r")
+    img = axes[0, 1].imshow(img_origin, cmap="RdBu_r")
     axes[0, 1].axis("off")
     # fig.colorbar(img, ax=axes[0, 1])
 
