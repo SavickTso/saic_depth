@@ -12,6 +12,8 @@ def find_average_non_nan(img, x, y, window_size=10):
         return average_depth
 
     roi = img[x - window_size : x + window_size, y - window_size : y + window_size]
+    if np.count_nonzero(roi) == 0:
+        return average_depth
     average_depth = np.mean(roi) * roi.size / np.count_nonzero(roi)
 
     return average_depth
@@ -50,14 +52,23 @@ def find_nearest_non_nan(img, x, y, ctr):
     return newdepth, ctr
 
 
-def figure(color, raw_depth, mask, pred, close=False, saveidx=0, avg_5_img=None, avg_10_img=None, near_img=None):
-    fig, axes = plt.subplots(2, 3, figsize=(10,7))
+def figure(
+    color,
+    raw_depth,
+    mask,
+    pred,
+    close=False,
+    saveidx=0,
+    avg_5_img=None,
+    avg_10_img=None,
+    near_img=None,
+):
+    fig, axes = plt.subplots(2, 3, figsize=(10, 7))
 
     color = color.cpu().permute(1, 2, 0)
     raw_depth = raw_depth.cpu()
     mask = mask.cpu()
     pred = pred.detach().cpu()
-
 
     img_origin = deepcopy(raw_depth.squeeze(dim=0).numpy())
     img_spiral = deepcopy(img_origin)
@@ -82,11 +93,12 @@ def figure(color, raw_depth, mask, pred, close=False, saveidx=0, avg_5_img=None,
     nmax = img_spiral.max()
     nmin = img_spiral.min()
 
-
     print("polars", vmax, vmin, nmax, nmin)
     # Normalize the predict depth image
     pred = (pred - vmin) * ((nmax - nmin) / (vmax - vmin)) + nmin
-    random_pts = [(np.random.randint(0, 255), np.random.randint(0, 319)) for i in range(500)]
+    random_pts = [
+        (np.random.randint(0, 255), np.random.randint(0, 319)) for i in range(500)
+    ]
     raw_sampled_sum = 0
     pred_sample_sum = 0
     for pt in random_pts:
@@ -94,14 +106,13 @@ def figure(color, raw_depth, mask, pred, close=False, saveidx=0, avg_5_img=None,
             continue
         raw_sampled_sum += img_origin[pt[0], pt[1]]
         pred_sample_sum += pred[0, pt[0], pt[1]]
-    depth_ratio = raw_sampled_sum/pred_sample_sum
+    depth_ratio = raw_sampled_sum / pred_sample_sum
     pred *= depth_ratio
 
     vmin = pred.min()
     vmax = pred.max()
 
     print("polars", vmax, vmin, nmax, nmin)
-
 
     axes[0, 0].set_title("RGB")
     axes[0, 0].imshow((color - color.min()) / (color.max() - color.min()))
@@ -116,32 +127,55 @@ def figure(color, raw_depth, mask, pred, close=False, saveidx=0, avg_5_img=None,
     # axes[0, 2].imshow(mask[0])
     # axes[0, 2].axis("off")
     axes[0, 2].set_title("Average Interpolation (window_size=5)")
-    img = axes[0, 2].imshow(avg_5_img, cmap="RdBu_r", vmin=nmin, vmax=nmax)
+    img = axes[0, 2].imshow(avg_5_img, cmap="RdBu_r")  # , vmin=nmin, vmax=nmax)
     axes[0, 2].axis("off")
 
     axes[1, 0].set_title("Saic Predicition")
     img = axes[1, 0].imshow(pred[0], cmap="RdBu_r", vmin=nmin, vmax=nmax)
     axes[1, 0].axis("off")
     # fig.colorbar(img, ax=axes[1, 0])
-    upsampled_image = cv.resize(pred[0].numpy().astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
-    cv.imwrite("/root/saic_depth_completion/output/pred_{}.png".format(saveidx), upsampled_image)
+    upsampled_image = cv.resize(
+        pred[0].numpy().astype("uint16"),
+        None,
+        fx=1920 / 320,
+        fy=1080 / 256,
+        interpolation=cv.INTER_LINEAR,
+    )
+    cv.imwrite(
+        "/root/saic_depth_completion/output/pred_{}.png".format(saveidx),
+        upsampled_image,
+    )
     print("shape of the upsampled image is ", upsampled_image.shape)
 
     axes[1, 1].set_title("Nearest Interpolation")
     img = axes[1, 1].imshow(near_img, cmap="RdBu_r", vmin=nmin, vmax=nmax)
     axes[1, 1].axis("off")
     # fig.colorbar(img, ax=axes[1, 1])
-    upsampled_image = cv.resize(img_spiral.astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
+    upsampled_image = cv.resize(
+        img_spiral.astype("uint16"),
+        None,
+        fx=1920 / 320,
+        fy=1080 / 256,
+        interpolation=cv.INTER_LINEAR,
+    )
     cv.imwrite("/root/saic_depth_completion/output/spiral.png", upsampled_image)
 
     axes[1, 2].set_title("Average Interpolation (window_size=10)")
     img = axes[1, 2].imshow(avg_10_img, cmap="RdBu_r", vmin=nmin, vmax=nmax)
     axes[1, 2].axis("off")
     # fig.colorbar(img, ax=axes[1, 2])
-    upsampled_image = cv.resize(img_average.astype('uint16'), None, fx=1920/320, fy=1080/256, interpolation=cv.INTER_LINEAR)
+    upsampled_image = cv.resize(
+        img_average.astype("uint16"),
+        None,
+        fx=1920 / 320,
+        fy=1080 / 256,
+        interpolation=cv.INTER_LINEAR,
+    )
     cv.imwrite("/root/saic_depth_completion/output/average.png", upsampled_image)
+    cbar_ax = fig.add_axes([0.92, 0.15, 0.01, 0.7])
+    fig.colorbar(img, cax=cbar_ax, orientation="vertical")
     plt.tight_layout()
-    plt.savefig('interpolation_result.svg', format='svg', dpi=300)
+    plt.savefig("interpolation_result.svg", format="svg", dpi=300)
     if close:
         plt.close(fig)
     return fig
